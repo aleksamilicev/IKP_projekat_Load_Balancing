@@ -1,5 +1,5 @@
 #include "../common/network.h"
-
+// patka
 #define WR_PORT 5060
 
 int main() {
