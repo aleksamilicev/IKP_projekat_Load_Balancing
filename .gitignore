@@ -1,32 +1,115 @@
-# Prerequisites
-*.d
-
-# Compiled Object files
-*.slo
-*.lo
-*.o
+.vscode/
+.vs/
+*.vcxproj.user
+*.vcxproj.filters
+*.suo
+*.user
+*.userosscache
+*.unsuccessfulbuild
+.ncrunch
+*.builds
+*_i.c
+*_p.c
+*h.h
+*.ilk
+*.log
+*.meta
 *.obj
-
-# Precompiled Headers
-*.gch
 *.pch
+*.ipch
+*.pdb
+*.idb
+*.tlog
+*.lastbuildstate
+*.sdf
+*.opendb
+.opensdf
 
-# Compiled Dynamic libraries
+Build directories
+[Bb]uild/
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+ARM/
+ARM64/
+
+CMake and build artifacts
+CMakeCache.txt
+CMakeFiles/
+cmakeinstall.cmake
+Makefile
+build/
+
+Output files
+*.exe
+*.dll
+*.lib
 *.so
 *.dylib
-*.dll
-
-# Fortran module files
-*.mod
-*.smod
-
-# Compiled Static libraries
-*.lai
-*.la
-*.a
-*.lib
-
-# Executables
-*.exe
 *.out
-*.app
+*.o
+
+Backup and temporary files
+*.bak
+*.swp
+*~
+
+IDE workspace and configuration files
+*.code-workspace
+.idea/
+__pycache/
+
+Other unwanted files
+*.tmp
+*.log
+*.VSCodeCounter
+*.vsixmanifest
+
+Exclude dependencies (e.g., NuGet packages)
+packages/
+*.nupkg
+.snupkg
+
+Ignore generated directories from Visual Studio templates
+ServiceFabricBackup/
+ServiceFabricApp/
+
+Ignore crash reports and logs
+hs_err_pid
+*.log
+.log.[0-9]
+*.stackdump
+If you use package managers
+*.pyc
+node_modules/
+*.lock
+*.cache
+*.cmake
+
+
+Ignore Visual Studio related files
+.vs/
+.vscode/
+.idea/
+
+Ignore SQLite and database related files
+*.db
+*.db-shm
+*.db-wal
+*.openbd
+*.suo
+
+Ignore build and debug files
+/Debug/
+*.exe
+*.ilk
+*.obj
+*.pdb
+*.log
+*.tlog
+*.tlb
+.recipe
+
+Ignore FileContentIndex files
+Server\FileContentIndex\.vsidx
