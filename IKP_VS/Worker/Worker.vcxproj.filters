@@ -18,12 +18,15 @@
     <ClCompile Include="wr_main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\Common\network.cpp">
+    <ClCompile Include="Worker.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="wr_main.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Worker.h">
       <Filter>Source Files</Filter>
     </ClInclude>
   </ItemGroup>

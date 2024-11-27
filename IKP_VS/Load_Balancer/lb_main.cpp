@@ -1,4 +1,4 @@
-#include "../common/network.h"
+#include "../common/network.cpp"
 
 #define LB_PORT 5059
 #define WORKER_PORT 5060 // Port Worker-a

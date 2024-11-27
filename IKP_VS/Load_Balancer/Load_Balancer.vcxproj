@@ -139,7 +139,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\network.cpp" />
     <ClCompile Include="lb_main.cpp" />
   </ItemGroup>
   <ItemGroup>

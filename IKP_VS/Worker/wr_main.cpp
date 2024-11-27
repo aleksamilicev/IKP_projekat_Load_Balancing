@@ -1,5 +1,4 @@
-#include "../common/network.h"
-// patka
+#include "../common/network.cpp" // referenciras .cpp, a ne .h
 #define WR_PORT 5060
 
 int main() {

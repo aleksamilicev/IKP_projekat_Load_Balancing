@@ -139,10 +139,19 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Dictionary.cpp" />
+    <ClCompile Include="HashMap.cpp" />
     <ClCompile Include="network.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Dictionary.h" />
+    <ClInclude Include="HashMap.h" />
     <ClInclude Include="network.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Load_Balancer\Load_Balancer.vcxproj">
+      <Project>{16ef01bc-f99a-4f9d-b55b-738e46180070}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

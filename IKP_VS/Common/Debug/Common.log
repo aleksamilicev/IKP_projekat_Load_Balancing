@@ -1,2 +1,3 @@
-﻿MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol _main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
-C:\Users\KORISNIK\Desktop\IKP_VS\LoadBalancing\Debug\Common.exe : fatal error LNK1120: 1 unresolved externals
+﻿  network.cpp
+MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol _main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
+C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Common.exe : fatal error LNK1120: 1 unresolved externals
