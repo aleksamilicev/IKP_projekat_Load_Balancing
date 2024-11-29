@@ -2,6 +2,9 @@
 <Project>
   <ProjectOutputs>
     <ProjectOutput>
+      <FullPath>C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Worker.exe</FullPath>
+    </ProjectOutput>
+    <ProjectOutput>
       <FullPath>C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Load_Balancer.exe</FullPath>
     </ProjectOutput>
   </ProjectOutputs>

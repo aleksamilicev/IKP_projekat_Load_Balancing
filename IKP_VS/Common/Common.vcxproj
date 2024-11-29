@@ -140,11 +140,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Dictionary.cpp" />
+    <ClCompile Include="DynamicArray.cpp" />
     <ClCompile Include="HashMap.cpp" />
     <ClCompile Include="network.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Dictionary.h" />
+    <ClInclude Include="DynamicArray.h" />
     <ClInclude Include="HashMap.h" />
     <ClInclude Include="network.h" />
   </ItemGroup>

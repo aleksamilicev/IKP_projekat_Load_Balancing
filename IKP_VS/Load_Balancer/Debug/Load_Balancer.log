@@ -1,2 +1,10 @@
 ﻿  lb_main.cpp
-  Load_Balancer.vcxproj -> C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Load_Balancer.exe
+C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\Load_Balancer\lb_main.cpp(13,23): warning C4018: '<': signed/unsigned mismatch
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl initialize_winsock(void)" (?initialize_winsock@@YAXXZ) referenced in function _main
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl cleanup_winsock(void)" (?cleanup_winsock@@YAXXZ) referenced in function _main
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl initialize_worker(struct Worker *,char const *,char const *,int,bool)" (?initialize_worker@@YAXPAUWorker@@PBD1H_N@Z) referenced in function "void __cdecl register_worker(char *)" (?register_worker@@YAXPAD@Z)
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl display_worker(struct Worker const *)" (?display_worker@@YAXPBUWorker@@@Z) referenced in function "void __cdecl print_registered_workers(void)" (?print_registered_workers@@YAXXZ)
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl initialize_dynamic_array(struct DynamicArray *,unsigned int)" (?initialize_dynamic_array@@YAXPAUDynamicArray@@I@Z) referenced in function "void __cdecl initialize_workers_array(void)" (?initialize_workers_array@@YAXXZ)
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl add_worker(struct DynamicArray *,struct Worker const *)" (?add_worker@@YAXPAUDynamicArray@@PBUWorker@@@Z) referenced in function "void __cdecl register_worker(char *)" (?register_worker@@YAXPAD@Z)
+lb_main.obj : error LNK2019: unresolved external symbol "void __cdecl display_dynamic_array(struct DynamicArray const *)" (?display_dynamic_array@@YAXPBUDynamicArray@@@Z) referenced in function "void __cdecl register_worker(char *)" (?register_worker@@YAXPAD@Z)
+C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Load_Balancer.exe : fatal error LNK1120: 7 unresolved externals

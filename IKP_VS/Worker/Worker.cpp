@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 void initialize_worker(Worker* worker, const char* id, const char* ip, int port, bool status) {
-    strncpy(worker->ID, id, sizeof(worker->ID) - 1);
-    strncpy(worker->IP, ip, sizeof(worker->IP) - 1);
+    strncpy_s(worker->ID, id, sizeof(worker->ID) - 1);
+    strncpy_s(worker->IP, ip, sizeof(worker->IP) - 1);
     worker->Port = port;
     worker->Status = status; // Ovo nam treba, jer WR1 skladisti podatke i on je zauzet pa sledecu poruku saljemo na WR2
                              // I to rasporedjivanje poruka radimo pomocu RR algoritma
