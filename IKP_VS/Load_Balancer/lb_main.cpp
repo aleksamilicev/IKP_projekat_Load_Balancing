@@ -1,6 +1,6 @@
-#include "../common/network.h"
-#include "../Common/DynamicArray.h" // Ukljuèujemo DynamicArray za rad sa nizovima
-#include "../Worker/Worker.h" // Da bismo koristili Worker strukturu
+#include "../common/network.cpp"
+#include "../Common/DynamicArray.cpp" // Ukljuèujemo DynamicArray za rad sa nizovima
+#include "../Worker/Worker.cpp" // Da bismo koristili Worker strukturu
 
 #define LB_PORT 5059
 #define WORKER_PORT 5060 // Port Worker-a
@@ -76,10 +76,19 @@ int main() {
         return 1;
     }
 
-    struct sockaddr_in worker_addr = { 0 };
-    worker_addr.sin_family = AF_INET;
-    worker_addr.sin_port = htons(WORKER_PORT);
-    inet_pton(AF_INET, WORKER_IP, &worker_addr.sin_addr);
+    // Kreiranje sockaddr_in strukture za Load Balancer
+    struct sockaddr_in lb_addr = { 0 };
+    lb_addr.sin_family = AF_INET;
+    lb_addr.sin_port = htons(LB_PORT);  // Port na kojem Load Balancer sluša
+    lb_addr.sin_addr.s_addr = INADDR_ANY;  // Sluša na svim interfejsima
+
+    // Povezivanje socket-a na port LB-a
+    if (bind(worker_socket, (struct sockaddr*)&lb_addr, sizeof(lb_addr)) == SOCKET_ERROR) {
+        printf("Bind failed with error: %d\n", WSAGetLastError());
+        closesocket(worker_socket);
+        cleanup_winsock();
+        return 1;
+    }
 
     char buffer[1024] = { 0 };
     struct sockaddr_in from_addr;
@@ -107,4 +116,3 @@ int main() {
     cleanup_winsock();
     return 0;
 }
-
