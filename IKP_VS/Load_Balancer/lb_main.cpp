@@ -8,6 +8,49 @@
 
 DynamicArray workersArray; // Niz sa Worker-ima
 
+// Funkcija za slanje poruke od Clienta ka Worker komponenti, ovde bi najverovatnije trebao ici Round Robin algoritam
+void forward_to_worker(const char* message, Worker* worker) {
+    // Kreiranje socket-a za slanje poruke Workeru
+    SOCKET send_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (send_socket == INVALID_SOCKET) {
+        printf("Failed to create socket for forwarding: %d\n", WSAGetLastError());
+        return;
+    }
+
+    struct sockaddr_in worker_addr = { 0 };
+    worker_addr.sin_family = AF_INET;
+    worker_addr.sin_port = htons(worker->Port);
+    inet_pton(AF_INET, worker->IP, &worker_addr.sin_addr);
+
+    // Slanje poruke Workeru
+    int result = sendto(send_socket, message, strlen(message), 0,
+        (struct sockaddr*)&worker_addr, sizeof(worker_addr));
+    if (result == SOCKET_ERROR) {
+        printf("Failed to send message to Worker %s: %d\n", worker->ID, WSAGetLastError());
+    }
+    else {
+        printf("Message forwarded to Worker %s.\n", worker->ID);
+
+        // Èekanje odgovora od Workera
+        char response[1024] = { 0 };
+        struct sockaddr_in from_addr;
+        int from_addr_len = sizeof(from_addr);
+        int bytes_received = recvfrom(send_socket, response, sizeof(response) - 1, 0,
+            (struct sockaddr*)&from_addr, &from_addr_len);
+        if (bytes_received == SOCKET_ERROR) {
+            printf("Failed to receive response from Worker %s: %d\n", worker->ID, WSAGetLastError());
+        }
+        else {
+            response[bytes_received] = '\0';
+            printf("Worker %s response: %s\n", worker->ID, response);
+        }
+    }
+
+    closesocket(send_socket);
+}
+
+
+
 void print_registered_workers() {
     printf("Currently registered workers:\n");
     for (int i = 0; i < workersArray.size; ++i) {
@@ -68,51 +111,123 @@ int main() {
     initialize_winsock();
     initialize_workers_array();
 
-    // Kreiranje UDP socket-a za komunikaciju sa Worker-ima
-    SOCKET worker_socket = socket(AF_INET, SOCK_DGRAM, 0);
-    if (worker_socket == INVALID_SOCKET) {
+    // Kreiranje UDP socket-a za registraciju Workera
+    SOCKET udp_worker_socket = socket(AF_INET, SOCK_DGRAM, 0);
+    if (udp_worker_socket == INVALID_SOCKET) {
         printf("Failed to create UDP socket for Worker communication: %d\n", WSAGetLastError());
         cleanup_winsock();
         return 1;
     }
 
-    // Kreiranje sockaddr_in strukture za Load Balancer
-    struct sockaddr_in lb_addr = { 0 };
-    lb_addr.sin_family = AF_INET;
-    lb_addr.sin_port = htons(LB_PORT);  // Port na kojem Load Balancer sluša
-    lb_addr.sin_addr.s_addr = INADDR_ANY;  // Sluša na svim interfejsima
+    // Bindovanje UDP socket-a
+    struct sockaddr_in lb_udp_addr = { 0 };
+    lb_udp_addr.sin_family = AF_INET;
+    lb_udp_addr.sin_port = htons(LB_PORT);
+    lb_udp_addr.sin_addr.s_addr = INADDR_ANY;
 
-    // Povezivanje socket-a na port LB-a
-    if (bind(worker_socket, (struct sockaddr*)&lb_addr, sizeof(lb_addr)) == SOCKET_ERROR) {
-        printf("Bind failed with error: %d\n", WSAGetLastError());
-        closesocket(worker_socket);
+    if (bind(udp_worker_socket, (struct sockaddr*)&lb_udp_addr, sizeof(lb_udp_addr)) == SOCKET_ERROR) {
+        printf("UDP Bind failed with error: %d\n", WSAGetLastError());
+        closesocket(udp_worker_socket);
         cleanup_winsock();
         return 1;
     }
 
-    char buffer[1024] = { 0 };
-    struct sockaddr_in from_addr;
-    int from_addr_len = sizeof(from_addr);
-
-    printf("Load Balancer listening for worker registrations on port %d...\n", LB_PORT);
-
-    while (true) {
-        // Prijem podataka od Workera (registracija)
-        int bytes_received = recvfrom(worker_socket, buffer, sizeof(buffer) - 1, 0,
-            (struct sockaddr*)&from_addr, &from_addr_len);
-        if (bytes_received == SOCKET_ERROR) {
-            printf("recvfrom failed with error: %d\n", WSAGetLastError());
-            continue;
-        }
-
-        buffer[bytes_received] = '\0';  // Završni karakter
-        printf("Received registration: %s\n", buffer);
-
-        // Obrada registracije Workera
-        register_worker(buffer);
+    // Kreiranje TCP socket-a za komunikaciju sa klijentima
+    SOCKET tcp_client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    if (tcp_client_socket == INVALID_SOCKET) {
+        printf("Failed to create TCP socket for Client communication: %d\n", WSAGetLastError());
+        closesocket(udp_worker_socket);
+        cleanup_winsock();
+        return 1;
     }
 
-    closesocket(worker_socket);
+    // Bindovanje TCP socket-a
+    struct sockaddr_in lb_tcp_addr = { 0 };
+    lb_tcp_addr.sin_family = AF_INET;
+    lb_tcp_addr.sin_port = htons(LB_PORT);
+    lb_tcp_addr.sin_addr.s_addr = INADDR_ANY;
+
+    if (bind(tcp_client_socket, (struct sockaddr*)&lb_tcp_addr, sizeof(lb_tcp_addr)) == SOCKET_ERROR) {
+        printf("TCP Bind failed with error: %d\n", WSAGetLastError());
+        closesocket(udp_worker_socket);
+        closesocket(tcp_client_socket);
+        cleanup_winsock();
+        return 1;
+    }
+
+    if (listen(tcp_client_socket, SOMAXCONN) == SOCKET_ERROR) {
+        printf("Listen failed with error: %d\n", WSAGetLastError());
+        closesocket(udp_worker_socket);
+        closesocket(tcp_client_socket);
+        cleanup_winsock();
+        return 1;
+    }
+
+    printf("Load Balancer is listening for workers (UDP) and clients (TCP) on port %d...\n", LB_PORT);
+
+    // Postavi oba socket-a za selektivno slušanje
+    fd_set read_fds;
+    SOCKET max_fd = max(udp_worker_socket, tcp_client_socket);
+
+    while (true) {
+        FD_ZERO(&read_fds);
+        FD_SET(udp_worker_socket, &read_fds);
+        FD_SET(tcp_client_socket, &read_fds);
+
+        int activity = select((int)(max_fd + 1), &read_fds, NULL, NULL, NULL);
+        if (activity == SOCKET_ERROR) {
+            printf("select() failed with error: %d\n", WSAGetLastError());
+            break;
+        }
+
+        // Obrada registracije Workera (UDP)
+        if (FD_ISSET(udp_worker_socket, &read_fds)) {
+            struct sockaddr_in from_addr;
+            int from_addr_len = sizeof(from_addr);
+            char buffer[1024] = { 0 };
+
+            int bytes_received = recvfrom(udp_worker_socket, buffer, sizeof(buffer) - 1, 0,
+                (struct sockaddr*)&from_addr, &from_addr_len);
+            if (bytes_received == SOCKET_ERROR) {
+                printf("recvfrom failed with error: %d\n", WSAGetLastError());
+                continue;
+            }
+
+            buffer[bytes_received] = '\0';
+            printf("Received registration: %s\n", buffer);
+
+            register_worker(buffer);
+        }
+
+        // Obrada zahteva klijenata (TCP)
+        if (FD_ISSET(tcp_client_socket, &read_fds)) {
+            struct sockaddr_in client_addr;
+            int client_addr_len = sizeof(client_addr);
+
+            SOCKET client_socket = accept(tcp_client_socket, (struct sockaddr*)&client_addr, &client_addr_len);
+            if (client_socket == INVALID_SOCKET) {
+                printf("accept() failed with error: %d\n", WSAGetLastError());
+                continue;
+            }
+
+            char buffer[1024] = { 0 };
+            int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+            if (bytes_received > 0) {
+                buffer[bytes_received] = '\0';
+                printf("Received from Client: %s\n", buffer);
+
+                // Poslati odgovor klijentu
+                const char* response = "Message received by Load Balancer.";
+                send(client_socket, response, strlen(response), 0);
+            }
+
+            closesocket(client_socket);
+        }
+    }
+
+    closesocket(udp_worker_socket);
+    closesocket(tcp_client_socket);
     cleanup_winsock();
     return 0;
 }
+
