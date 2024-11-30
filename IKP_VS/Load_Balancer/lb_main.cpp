@@ -214,11 +214,21 @@ int main() {
             int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
             if (bytes_received > 0) {
                 buffer[bytes_received] = '\0';
-                printf("Received from Client: %s\n", buffer);
+                printf("\nReceived from Client: %s\n", buffer);
 
-                // Poslati odgovor klijentu
-                const char* response = "Message received by Load Balancer.";
-                send(client_socket, response, strlen(response), 0);
+                // Proslijedi poruku prvom Workeru
+                if (workersArray.size > 0) {
+                    Worker* selected_worker = &workersArray.array[0];
+                    forward_to_worker(buffer, selected_worker);
+
+                    // Odgovori klijentu
+                    const char* response = "Message successfully stored.";
+                    send(client_socket, response, strlen(response), 0);
+                }
+                else {
+                    const char* response = "No available Workers.";
+                    send(client_socket, response, strlen(response), 0);
+                }
             }
 
             closesocket(client_socket);

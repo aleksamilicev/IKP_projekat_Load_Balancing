@@ -74,7 +74,7 @@ int main() {
     }
 
     // Oslobaðanje memorije nakon korišæenja
-    delete[] workers;
+    //delete[] workers;
 
     while (true) {
         // Prijem poruke od Load Balancer-a
@@ -86,10 +86,31 @@ int main() {
         }
 
         buffer[bytes_received] = '\0'; // Završni karakter
-        printf("Received from LB: %s\n", buffer);
+        printf("\nReceived from LB: %s\n", buffer);
 
-        // Opcionalno: Slanje odgovora LB-u (ako je potrebno)
-        const char* response = "Message processed by Worker.";
+        // Proveri dostupnost workera (koristi prvog za sada)
+        Worker* target_worker = &workers[0];
+        if (target_worker->Status == false) {
+            printf("Worker %s is busy. Skipping.\n", target_worker->ID);
+            continue;
+        }
+
+        // Skladištenje podataka
+        if (target_worker->Data) {
+            free(target_worker->Data); // Oslobodi prethodne podatke ako postoje
+        }
+        target_worker->Data = _strdup(buffer);  // Skladišti podatke u prvog workera
+        printf("Stored data in Worker %s: %s\n", target_worker->ID, (char*)target_worker->Data);
+
+        // Ispis stanja svih workera
+        printf("\nWorkers' current state:\n");
+        for (int i = 0; i < num_workers; ++i) {
+            printf("%s: [%s]\n", workers[i].ID, workers[i].Data ? (char*)workers[i].Data : "");
+        }
+        printf("\n");
+
+        // Slanje potvrde LB-u
+        const char* response = "Message successfully stored.";
         int result = sendto(wr_server_socket, response, strlen(response), 0,
             (struct sockaddr*)&lb_addr, sizeof(lb_addr));
         if (result == SOCKET_ERROR) {
@@ -98,6 +119,7 @@ int main() {
         else {
             printf("Response sent to LB.\n");
         }
+
     }
 
     closesocket(wr_server_socket);
