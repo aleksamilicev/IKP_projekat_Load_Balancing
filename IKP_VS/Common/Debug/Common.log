@@ -3,7 +3,5 @@
   HashMap.cpp
   network.cpp
   Generating Code...
-DynamicArray.obj : error LNK2019: unresolved external symbol "void __cdecl display_worker(struct Worker const *)" (?display_worker@@YAXPBUWorker@@@Z) referenced in function "void __cdecl display_dynamic_array(struct DynamicArray const *)" (?display_dynamic_array@@YAXPBUDynamicArray@@@Z)
-HashMap.obj : error LNK2001: unresolved external symbol "void __cdecl display_worker(struct Worker const *)" (?display_worker@@YAXPBUWorker@@@Z)
 MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol _main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
-C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Common.exe : fatal error LNK1120: 2 unresolved externals
+C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Common.exe : fatal error LNK1120: 1 unresolved externals

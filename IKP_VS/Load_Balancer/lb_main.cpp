@@ -1,14 +1,17 @@
 #include "../common/network.cpp"
 #include "../Common/DynamicArray.cpp" // Ukljuèujemo DynamicArray za rad sa nizovima
-#include "../Worker/Worker.cpp" // Da bismo koristili Worker strukturu
+#include "../Worker/Worker.h" // Da bismo koristili Worker strukturu
 
 #define LB_PORT 5059
 #define WORKER_PORT 5060 // Port Worker-a
 #define WORKER_IP "127.0.0.1" // IP adresa Worker-a (localhost)
 
+int worker_index = 0; // Indeks za odabir Workera
+
+
 DynamicArray workersArray; // Niz sa Worker-ima
 
-// Funkcija za slanje poruke od Clienta ka Worker komponenti, ovde bi najverovatnije trebao ici Round Robin algoritam
+// Funkcija za slanje poruke od Clienta ka Worker komponenti
 void forward_to_worker(const char* message, Worker* worker) {
     // Kreiranje socket-a za slanje poruke Workeru
     SOCKET send_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -30,24 +33,12 @@ void forward_to_worker(const char* message, Worker* worker) {
     }
     else {
         printf("Message forwarded to Worker %s.\n", worker->ID);
-
-        // Èekanje odgovora od Workera
-        char response[1024] = { 0 };
-        struct sockaddr_in from_addr;
-        int from_addr_len = sizeof(from_addr);
-        int bytes_received = recvfrom(send_socket, response, sizeof(response) - 1, 0,
-            (struct sockaddr*)&from_addr, &from_addr_len);
-        if (bytes_received == SOCKET_ERROR) {
-            printf("Failed to receive response from Worker %s: %d\n", worker->ID, WSAGetLastError());
-        }
-        else {
-            response[bytes_received] = '\0';
-            printf("Worker %s response: %s\n", worker->ID, response);
-        }
     }
 
+    // Ne èekamo odgovor odmah, samo šaljemo poruku
     closesocket(send_socket);
 }
+
 
 
 
@@ -211,15 +202,29 @@ int main() {
             }
 
             char buffer[1024] = { 0 };
-            int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-            if (bytes_received > 0) {
+
+            while (true) { // Ovaj while omoguæava višekratnu komunikaciju
+                int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+                if (bytes_received == SOCKET_ERROR) {
+                    printf("recv() failed with error: %d\n", WSAGetLastError());
+                    break; // Prekini petlju ako je došlo do greške
+                }
+                if (bytes_received == 0) {
+                    break; // Klijent je zatvorio konekciju
+                }
+
                 buffer[bytes_received] = '\0';
                 printf("\nReceived from Client: %s\n", buffer);
 
-                // Proslijedi poruku prvom Workeru
-                if (workersArray.size > 0) {
-                    Worker* selected_worker = &workersArray.array[0];
-                    forward_to_worker(buffer, selected_worker);
+                // Prosledi poruku odgovarajuæem Worker-u
+                if (workersArray.size > 0) {   
+                    for (int i = 0; i < workersArray.size; ++i) {
+                        Worker* selected_worker = &workersArray.array[(worker_index + i) % workersArray.size];
+                        forward_to_worker(buffer, selected_worker);
+                    }
+
+                    // Prilagodimo indeks Workera za sledeæu poruku (ciklièno)
+                    worker_index = (worker_index + 1) % workersArray.size;
 
                     // Odgovori klijentu
                     const char* response = "Message successfully stored.";
@@ -231,8 +236,9 @@ int main() {
                 }
             }
 
-            closesocket(client_socket);
+            closesocket(client_socket); // Zatvori socket tek nakon što klijent završi sa slanjem poruka
         }
+
     }
 
     closesocket(udp_worker_socket);

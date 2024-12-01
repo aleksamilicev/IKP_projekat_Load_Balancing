@@ -3,6 +3,8 @@
 #include <time.h>
 #define WR_PORT 5060
 
+int worker_index = 0; // Indeks koji ciklièno dodeljuje poruke Worker-ima
+
 int main() {
     initialize_winsock();
 
@@ -38,9 +40,9 @@ int main() {
     struct sockaddr_in from_addr;
     int from_addr_len = sizeof(from_addr);
 
-    srand((unsigned int)time(NULL)); // Seed za random generisanje
-
-    int num_workers = 1 + rand() % 5; // Generišemo 1-5 workera
+    //srand((unsigned int)time(NULL)); // Seed za random generisanje
+    //int num_workers = 1 + rand() % 5; // Generišemo 1-5 workera
+    int num_workers = 2; // Generišemo 1-5 workera
     Worker* workers = new Worker[num_workers];  // Dinamièki niz workera
 
     printf("Generating %d Workers...\n", num_workers);
@@ -88,18 +90,25 @@ int main() {
         buffer[bytes_received] = '\0'; // Završni karakter
         printf("\nReceived from LB: %s\n", buffer);
 
-        // Proveri dostupnost workera (koristi prvog za sada)
-        Worker* target_worker = &workers[0];
-        if (target_worker->Status == false) {
-            printf("Worker %s is busy. Skipping.\n", target_worker->ID);
+        // Pronaði dostupnog workera (koristi ciklièno dodeljivanje)
+        Worker* target_worker = NULL;
+        for (int i = 0; i < num_workers; ++i) {
+            target_worker = &workers[(worker_index + i) % num_workers];  // Ovdje koristi globalni worker_index
+            if (target_worker->Status == true) {  // Ako je Worker slobodan
+                break;
+            }
+        }
+
+        if (target_worker == NULL) {
+            printf("No available Workers. Skipping.\n");
             continue;
         }
 
-        // Skladištenje podataka
+        // Skladištenje podataka u odabranom Worker-u
         if (target_worker->Data) {
             free(target_worker->Data); // Oslobodi prethodne podatke ako postoje
         }
-        target_worker->Data = _strdup(buffer);  // Skladišti podatke u prvog workera
+        target_worker->Data = _strdup(buffer);  // Skladišti podatke
         printf("Stored data in Worker %s: %s\n", target_worker->ID, (char*)target_worker->Data);
 
         // Ispis stanja svih workera
@@ -120,6 +129,8 @@ int main() {
             printf("Response sent to LB.\n");
         }
 
+        // Ažuriraj worker_index za sledeæu poruku
+        worker_index = (worker_index + 1) % num_workers;
     }
 
     closesocket(wr_server_socket);

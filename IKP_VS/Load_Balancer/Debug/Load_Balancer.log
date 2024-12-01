@@ -1,3 +1,4 @@
 ﻿  lb_main.cpp
-C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\Load_Balancer\lb_main.cpp(56,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\Load_Balancer\lb_main.cpp(47,23): warning C4018: '<': signed/unsigned mismatch
+C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\Load_Balancer\lb_main.cpp(221,39): warning C4018: '<': signed/unsigned mismatch
   Load_Balancer.vcxproj -> C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Load_Balancer.exe

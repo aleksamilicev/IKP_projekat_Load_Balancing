@@ -1,4 +1,5 @@
 #include "DynamicArray.h"
+#include "../Worker/Worker.cpp"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
