@@ -42,7 +42,7 @@ int main() {
 
     //srand((unsigned int)time(NULL)); // Seed za random generisanje
     //int num_workers = 1 + rand() % 5; // Generišemo 1-5 workera
-    int num_workers = 2; // Generišemo 1-5 workera
+    int num_workers = 3; // Generišemo 1-5 workera
     Worker* workers = new Worker[num_workers];  // Dinamièki niz workera
 
     printf("Generating %d Workers...\n", num_workers);
@@ -104,19 +104,24 @@ int main() {
             continue;
         }
 
-        // Skladištenje podataka u odabranom Worker-u
-        if (target_worker->Data) {
-            free(target_worker->Data); // Oslobodi prethodne podatke ako postoje
-        }
-        target_worker->Data = _strdup(buffer);  // Skladišti podatke
-        printf("Stored data in Worker %s: %s\n", target_worker->ID, (char*)target_worker->Data);
+        // Dodavanje nove poruke u Worker
+        add_message(target_worker, buffer);  // Dodaj poruku u Worker
 
         // Ispis stanja svih workera
         printf("\nWorkers' current state:\n");
         for (int i = 0; i < num_workers; ++i) {
-            printf("%s: [%s]\n", workers[i].ID, workers[i].Data ? (char*)workers[i].Data : "");
+            printf("%s: [", workers[i].ID);
+            // Ispisivanje svih poruka za trenutnog Workera
+            for (int j = 0; j < workers[i].message_count; ++j) {
+                printf("%s", workers[i].Data[j]);
+                if (j < workers[i].message_count - 1) {
+                    printf(", ");  // Dodaj zarez izmeðu poruka
+                }
+            }
+            printf("]\n");
         }
         printf("\n");
+
 
         // Slanje potvrde LB-u
         const char* response = "Message successfully stored.";
@@ -132,6 +137,7 @@ int main() {
         // Ažuriraj worker_index za sledeæu poruku
         worker_index = (worker_index + 1) % num_workers;
     }
+
 
     closesocket(wr_server_socket);
     cleanup_winsock();

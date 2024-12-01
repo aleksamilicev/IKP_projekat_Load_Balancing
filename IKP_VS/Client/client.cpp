@@ -10,7 +10,7 @@ int main() {
     printf("Connected to Load Balancer.\n");
 
     // Poruke koje klijent šalje
-    const char* messages[] = { "Message1", "Message2", "Message3" };
+    const char* messages[] = { "Message1", "Message2", "Message3"};
     int num_messages = sizeof(messages) / sizeof(messages[0]);
 
     for (int i = 0; i < num_messages; ++i) {
