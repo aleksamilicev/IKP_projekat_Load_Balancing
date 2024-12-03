@@ -52,7 +52,7 @@ int main() {
     struct sockaddr_in from_addr;
     int from_addr_len = sizeof(from_addr);
 
-    int num_workers = 4; // Generisanje 2 Workera za primer
+    int num_workers = 1; // Generisanje 2 Workera za primer
     Worker* workers = new Worker[num_workers]; // Dinamièki niz Workera
 
     printf("Generating %d Workers...\n", num_workers);

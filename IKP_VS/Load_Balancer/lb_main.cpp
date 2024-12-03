@@ -1,14 +1,13 @@
 #include "../common/network.cpp"
 #include "../Common/DynamicArray.cpp" // Ukljuèujemo DynamicArray za rad sa nizovima
 #include "../Worker/Worker.h" // Da bismo koristili Worker strukturu
+#include <thread>
 
 #define LB_PORT 5059
 #define WORKER_PORT 5060 // Port Worker-a
 #define WORKER_IP "127.0.0.1" // IP adresa Worker-a (localhost)
 
 int worker_index = 0; // Indeks za odabir Workera
-
-
 DynamicArray workersArray; // Niz sa Worker-ima
 
 // Funkcija za slanje poruke od Clienta ka Worker komponenti (koristi jedan socket)
@@ -18,7 +17,6 @@ void forward_to_worker(const char* message, Worker* worker, SOCKET send_socket) 
     worker_addr.sin_port = htons(worker->Port);
     inet_pton(AF_INET, worker->IP, &worker_addr.sin_addr);
 
-    // Slanje poruke Workeru
     int result = sendto(send_socket, message, strlen(message), 0,
         (struct sockaddr*)&worker_addr, sizeof(worker_addr));
     if (result == SOCKET_ERROR) {
@@ -29,77 +27,79 @@ void forward_to_worker(const char* message, Worker* worker, SOCKET send_socket) 
     }
 }
 
-
-
-
-void print_registered_workers() {
-    printf("Currently registered workers:\n");
-    for (int i = 0; i < workersArray.size; ++i) {
-        display_worker(&workersArray.array[i]);
-    }
-}
-
-void initialize_workers_array() {
-    initialize_dynamic_array(&workersArray, 10);  // Kreiraj DynamicArray sa poèetnim kapacitetom 10
-}
-
-
 void register_worker(char* buffer) {
-    // Buffer format: WR1;127.0.0.1;5060;1
     char* token = NULL;
-    char id[10];
-    char ip[16];
+    char id[10], ip[16];
     int port{};
     bool status{};
 
-    // Parsiranje podataka iz buffer-a
-    token = strtok_s(buffer, ";", &buffer);  // Prvi token
-    if (token != NULL) {
-        strcpy_s(id, sizeof(id), token);
-    }
+    token = strtok_s(buffer, ";", &buffer);
+    if (token) strcpy_s(id, sizeof(id), token);
 
-    token = strtok_s(NULL, ";", &buffer);  // Drugi token
-    if (token != NULL) {
-        strcpy_s(ip, sizeof(ip), token);
-    }
+    token = strtok_s(NULL, ";", &buffer);
+    if (token) strcpy_s(ip, sizeof(ip), token);
 
-    token = strtok_s(NULL, ";", &buffer);  // Treæi token
-    if (token != NULL) {
-        port = atoi(token);
-    }
+    token = strtok_s(NULL, ";", &buffer);
+    if (token) port = atoi(token);
 
-    token = strtok_s(NULL, ";", &buffer);  // Èetvrti token
-    if (token != NULL) {
-        status = atoi(token);
-    }
+    token = strtok_s(NULL, ";", &buffer);
+    if (token) status = atoi(token);
 
-    // Kreiranje Workera
     Worker worker;
     initialize_worker(&worker, id, ip, port, status);
-
-    // Dodavanje Workera u DynamicArray
     add_worker(&workersArray, &worker);
 
     printf("Worker %s registered to LB.\n", worker.ID);
-    display_dynamic_array(&workersArray);  // Ispis svih registrovanih Workera
+    display_dynamic_array(&workersArray);
 }
 
+// Funkcija za obradu klijenta u zasebnom threadu
+void handle_client(SOCKET client_socket, SOCKET send_socket) {
+    char buffer[1024] = { 0 };
 
+    while (true) {
+        int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+        if (bytes_received == SOCKET_ERROR) {
+            printf("recv() failed with error: %d\n", WSAGetLastError());
+            break;
+        }
+        if (bytes_received == 0) {
+            printf("Client disconnected.\n");
+            break;
+        }
 
+        buffer[bytes_received] = '\0';
+        printf("Received from Client: %s\n", buffer);
 
+        if (workersArray.size > 0) {
+            Worker* selected_worker = &workersArray.array[worker_index];
+            forward_to_worker(buffer, selected_worker, send_socket);
+
+            // Ciklièno prilagodimo indeks Workera
+            worker_index = (worker_index + 1) % workersArray.size;
+
+            const char* response = "Message successfully stored.";
+            send(client_socket, response, strlen(response), 0);
+        }
+        else {
+            const char* response = "No available Workers.";
+            send(client_socket, response, strlen(response), 0);
+        }
+    }
+
+    closesocket(client_socket);
+}
 
 int main() {
     initialize_winsock();
-    initialize_workers_array();
+    initialize_dynamic_array(&workersArray, 10);
 
     SOCKET send_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (send_socket == INVALID_SOCKET) {
         printf("Failed to create socket for forwarding: %d\n", WSAGetLastError());
-        //cleanup_winsock();
         return 1;
     }
 
-    // Kreiranje UDP socket-a za registraciju Workera
     SOCKET udp_worker_socket = socket(AF_INET, SOCK_DGRAM, 0);
     if (udp_worker_socket == INVALID_SOCKET) {
         printf("Failed to create UDP socket for Worker communication: %d\n", WSAGetLastError());
@@ -107,7 +107,6 @@ int main() {
         return 1;
     }
 
-    // Bindovanje UDP socket-a
     struct sockaddr_in lb_udp_addr = { 0 };
     lb_udp_addr.sin_family = AF_INET;
     lb_udp_addr.sin_port = htons(LB_PORT);
@@ -120,7 +119,6 @@ int main() {
         return 1;
     }
 
-    // Kreiranje TCP socket-a za komunikaciju sa klijentima
     SOCKET tcp_client_socket = socket(AF_INET, SOCK_STREAM, 0);
     if (tcp_client_socket == INVALID_SOCKET) {
         printf("Failed to create TCP socket for Client communication: %d\n", WSAGetLastError());
@@ -129,7 +127,6 @@ int main() {
         return 1;
     }
 
-    // Bindovanje TCP socket-a
     struct sockaddr_in lb_tcp_addr = { 0 };
     lb_tcp_addr.sin_family = AF_INET;
     lb_tcp_addr.sin_port = htons(LB_PORT);
@@ -153,23 +150,8 @@ int main() {
 
     printf("Load Balancer is listening for workers (UDP) and clients (TCP) on port %d...\n", LB_PORT);
 
-    // Postavi oba socket-a za selektivno slušanje
-    fd_set read_fds;
-    SOCKET max_fd = max(udp_worker_socket, tcp_client_socket);
-
-    while (true) {
-        FD_ZERO(&read_fds);
-        FD_SET(udp_worker_socket, &read_fds);
-        FD_SET(tcp_client_socket, &read_fds);
-
-        int activity = select((int)(max_fd + 1), &read_fds, NULL, NULL, NULL);
-        if (activity == SOCKET_ERROR) {
-            printf("select() failed with error: %d\n", WSAGetLastError());
-            break;
-        }
-
-        // Obrada registracije Workera (UDP)
-        if (FD_ISSET(udp_worker_socket, &read_fds)) {
+    std::thread udp_thread([&]() {
+        while (true) {
             struct sockaddr_in from_addr;
             int from_addr_len = sizeof(from_addr);
             char buffer[1024] = { 0 };
@@ -186,90 +168,28 @@ int main() {
 
             register_worker(buffer);
         }
+        });
 
-        // Obrada zahteva klijenata (TCP)
-        if (FD_ISSET(tcp_client_socket, &read_fds)) {
-            struct sockaddr_in client_addr;
-            int client_addr_len = sizeof(client_addr);
+    while (true) {
+        struct sockaddr_in client_addr;
+        int client_addr_len = sizeof(client_addr);
 
-            SOCKET client_socket = accept(tcp_client_socket, (struct sockaddr*)&client_addr, &client_addr_len);
-            if (client_socket == INVALID_SOCKET) {
-                printf("accept() failed with error: %d\n", WSAGetLastError());
-                continue;
-            }
-
-            u_long mode = 1;  // 1 za non-blocking
-            int result = ioctlsocket(client_socket, FIONBIO, &mode);
-            if (result != 0) {
-                printf("Failed to set socket to non-blocking mode: %d\n", WSAGetLastError());
-                closesocket(client_socket);
-                continue;
-            }
-
-            char buffer[1024] = { 0 };
-
-            while (true) { // Ovaj while omoguæava višekratnu komunikaciju
-                fd_set client_fds;
-                FD_ZERO(&client_fds);
-                FD_SET(client_socket, &client_fds);
-
-                // Èekanje na podatke na socketu
-                int ready = select(1, &client_fds, NULL, NULL, NULL);
-                if (ready == SOCKET_ERROR) {
-                    printf("select() failed for client socket: %d\n", WSAGetLastError());
-                    break;
-                }
-
-                // Ako ima podataka, èitaj
-                if (FD_ISSET(client_socket, &client_fds)) {
-                    int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
-                    if (bytes_received == SOCKET_ERROR) {
-                        if (WSAGetLastError() == WSAEWOULDBLOCK) {
-                            // Nema podataka trenutno, možeš da nastaviš sa sledeæim ciklusom
-                            continue;
-                        }
-                        else {
-                            printf("recv() failed with error: %d\n", WSAGetLastError());
-                            break;
-                        }
-                    }
-                    if (bytes_received == 0) {
-                        break; // Klijent je zatvorio konekciju
-                    }
-
-                    buffer[bytes_received] = '\0';
-                    printf("\nReceived from Client: %s\n", buffer);
-
-                    // Prosledi poruku odgovarajuæem Worker-u
-                    if (workersArray.size > 0) {
-                        for (int i = 0; i < workersArray.size; ++i) {
-                            Worker* selected_worker = &workersArray.array[(worker_index + i) % workersArray.size];
-                            forward_to_worker(buffer, selected_worker, send_socket);
-                        }
-
-                        // Prilagodimo indeks Workera za sledeæu poruku (ciklièno)
-                        worker_index = (worker_index + 1) % workersArray.size;
-
-                        // Odgovori klijentu
-                        const char* response = "Message successfully stored.";
-                        send(client_socket, response, strlen(response), 0);
-                    }
-                    else {
-                        const char* response = "No available Workers.";
-                        send(client_socket, response, strlen(response), 0);
-                    }
-                }
-            }
-
-            closesocket(client_socket); // Zatvori socket tek nakon što klijent završi sa slanjem poruka
+        SOCKET client_socket = accept(tcp_client_socket, (struct sockaddr*)&client_addr, &client_addr_len);
+        if (client_socket == INVALID_SOCKET) {
+            printf("accept() failed with error: %d\n", WSAGetLastError());
+            continue;
         }
 
+        printf("Client connected.\n");
+
+        // Kreiraj novi thread za svakog klijenta
+        std::thread client_thread(handle_client, client_socket, send_socket);
+        client_thread.detach();
     }
 
+    udp_thread.join();
     closesocket(udp_worker_socket);
     closesocket(tcp_client_socket);
     cleanup_winsock();
     return 0;
 }
-
-
