@@ -1,6 +1,6 @@
-#include "../common/network.cpp" // referenciraš .cpp, a ne .h
+#include "../common/network.cpp"  // Umesto network.cpp
 #include "Worker.h"
-#include "../Common/CircularBuffer.cpp"
+#include "../Common/CircularBuffer.cpp"  // Umesto CircularBuffer.cpp
 #include <time.h>
 #include <string.h>
 
@@ -16,29 +16,6 @@ void notify_workers(Worker* workers, int num_workers, const char* message, const
         }
     }
 }
-
-
-/*  Na ovaj nacin radi notifikacija i sinhronizacija
-* ** Sto se tice ispisa fali mi samo ovaj medju ispis, ali okej je, radi posao
-- Client salje m1, m2, m3.
-  WR1: [m1]
-  WR2: []
-  - WR1 notifikuje ostale workere
-  WR1: [m1]
-  WR2: [m1]
-  - skladisti se m2
-  WR1: [m1]
-  WR2: [m1, m2]
-  - WR2 notifikuje ostale workere
-  WR1: [m1, m2]
-  WR2: [m1, m2]
-  - skladisti se m3
-  WR1: [m1, m2, m3]
-  WR2: [m1, m2]
-  - WR1 notifikuje ostale workere
-  WR1: [m1, m2, m3]
-  WR2: [m1, m2, m3]
-*/
 
 int main() {
     initialize_winsock();
@@ -75,7 +52,7 @@ int main() {
     struct sockaddr_in from_addr;
     int from_addr_len = sizeof(from_addr);
 
-    int num_workers = 2; // Generisanje 2 Workera za primer
+    int num_workers = 4; // Generisanje 2 Workera za primer
     Worker* workers = new Worker[num_workers]; // Dinamièki niz Workera
 
     printf("Generating %d Workers...\n", num_workers);
@@ -137,7 +114,6 @@ int main() {
             }
             printf("]\n");
         }
-
 
         // Notifikacija svim ostalim Worker-ima
         notify_workers(workers, num_workers, buffer, target_worker->ID);
