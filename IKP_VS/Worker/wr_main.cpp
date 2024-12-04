@@ -7,6 +7,7 @@
 #define WR_PORT 5060
 
 int worker_index = 0; // Indeks koji ciklièno dodeljuje poruke Worker-ima
+int num_workers = 3;
 
 // Funkcija za slanje notifikacije svim ostalim Worker-ima
 void notify_workers(Worker* workers, int num_workers, const char* message, const char* sender_id) {
@@ -52,7 +53,7 @@ int main() {
     struct sockaddr_in from_addr;
     int from_addr_len = sizeof(from_addr);
 
-    int num_workers = 1; // Generisanje 2 Workera za primer
+    //int num_workers = 3; // Generisanje 2 Workera za primer
     Worker* workers = new Worker[num_workers]; // Dinamièki niz Workera
 
     printf("Generating %d Workers...\n", num_workers);
@@ -115,7 +116,7 @@ int main() {
             printf("]\n");
         }
 
-        // Notifikacija svim ostalim Worker-ima
+        // Notifikacija svim ostalim Workera
         notify_workers(workers, num_workers, buffer, target_worker->ID);
         printf("- %s notifies other workers\n", target_worker->ID);
 
@@ -143,6 +144,7 @@ int main() {
             printf("Response sent to LB.\n");
         }
     }
+
 
     // Oslobaðanje resursa
     delete[] workers;

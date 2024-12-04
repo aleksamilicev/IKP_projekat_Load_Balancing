@@ -2,12 +2,16 @@
 #include "../Common/DynamicArray.cpp" // Ukljuèujemo DynamicArray za rad sa nizovima
 #include "../Worker/Worker.h" // Da bismo koristili Worker strukturu
 #include <thread>
-
+// LB - Round Robin ovde sluzi da zahtev klijenta rasporedimo na odgovarajuci WR
+// WR - Round Robin ovde sluzi za biranje radnika u kojem ce podatak biti smesten
 #define LB_PORT 5059
 #define WORKER_PORT 5060 // Port Worker-a
 #define WORKER_IP "127.0.0.1" // IP adresa Worker-a (localhost)
 
-int worker_index = 0; // Indeks za odabir Workera
+
+int worker_index = 0; // Indeks za odabir Workera, RR
+int worker_num = 0;
+
 DynamicArray workersArray; // Niz sa Worker-ima
 
 // Funkcija za slanje poruke od Clienta ka Worker komponenti (koristi jedan socket)
@@ -23,7 +27,10 @@ void forward_to_worker(const char* message, Worker* worker, SOCKET send_socket) 
         printf("Failed to send message to Worker %s: %d\n", worker->ID, WSAGetLastError());
     }
     else {
-        printf("Message forwarded to Worker %s.\n", worker->ID);
+        printf("Message forwarded to Worker.\n");
+
+        //printf("Message successfully sent to Worker.\n");
+        //printf("Current worker_index after send: %d\n", worker_index);
     }
 }
 
@@ -73,10 +80,12 @@ void handle_client(SOCKET client_socket, SOCKET send_socket) {
 
         if (workersArray.size > 0) {
             Worker* selected_worker = &workersArray.array[worker_index];
+            //printf("Selected Worker: %s (Index: %d) for message: %s\n", selected_worker->ID, worker_index, buffer);
             forward_to_worker(buffer, selected_worker, send_socket);
 
             // Ciklièno prilagodimo indeks Workera
-            worker_index = (worker_index + 1) % workersArray.size;
+            worker_num = (worker_index + 1) % workersArray.size;    //Buni se kad uradim ovako, pa sam odlucio da stavim na 0
+            worker_index = 0;
 
             const char* response = "Message successfully stored.";
             send(client_socket, response, strlen(response), 0);
