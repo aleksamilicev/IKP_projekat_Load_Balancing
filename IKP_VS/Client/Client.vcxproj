@@ -19,7 +19,6 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\Common\network.cpp" />
     <ClCompile Include="client.cpp" />
   </ItemGroup>
   <ItemGroup>

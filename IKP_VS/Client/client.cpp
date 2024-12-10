@@ -1,4 +1,4 @@
-#include "../common/network.h"
+#include "../common/network.cpp"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>

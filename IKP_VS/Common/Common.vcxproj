@@ -143,14 +143,20 @@
     <ClCompile Include="Dictionary.cpp" />
     <ClCompile Include="DynamicArray.cpp" />
     <ClCompile Include="HashMap.cpp" />
+    <ClCompile Include="LoadBalancer.cpp" />
     <ClCompile Include="network.cpp" />
+    <ClCompile Include="ThreadPool.cpp" />
+    <ClCompile Include="WorkerManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CircularBuffer.h" />
     <ClInclude Include="Dictionary.h" />
     <ClInclude Include="DynamicArray.h" />
     <ClInclude Include="HashMap.h" />
+    <ClInclude Include="LoadBalancer.h" />
     <ClInclude Include="network.h" />
+    <ClInclude Include="ThreadPool.h" />
+    <ClInclude Include="WorkerManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Load_Balancer\Load_Balancer.vcxproj">

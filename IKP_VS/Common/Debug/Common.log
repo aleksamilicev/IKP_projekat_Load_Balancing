@@ -1,8 +1,43 @@
-﻿  CircularBuffer.cpp
+﻿  Worker.cpp
+  CircularBuffer.cpp
   Dictionary.cpp
   DynamicArray.cpp
   HashMap.cpp
+  LoadBalancer.cpp
   network.cpp
+  ThreadPool.cpp
+  WorkerManager.cpp
   Generating Code...
+DynamicArray.obj : error LNK2005: "void __cdecl add_message(struct Worker *,char const *)" (?add_message@@YAXPAUWorker@@PBD@Z) already defined in Worker.obj
+DynamicArray.obj : error LNK2005: "void __cdecl display_worker(struct Worker const *)" (?display_worker@@YAXPBUWorker@@@Z) already defined in Worker.obj
+DynamicArray.obj : error LNK2005: "void __cdecl free_worker_messages(struct Worker *)" (?free_worker_messages@@YAXPAUWorker@@@Z) already defined in Worker.obj
+DynamicArray.obj : error LNK2005: "void __cdecl initialize_worker(struct Worker *,char const *,char const *,int,bool)" (?initialize_worker@@YAXPAUWorker@@PBD1H_N@Z) already defined in Worker.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl add_message(struct Worker *,char const *)" (?add_message@@YAXPAUWorker@@PBD@Z) already defined in Worker.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl add_worker(struct DynamicArray *,struct Worker const *)" (?add_worker@@YAXPAUDynamicArray@@PBUWorker@@@Z) already defined in DynamicArray.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl clear_dynamic_array(struct DynamicArray *)" (?clear_dynamic_array@@YAXPAUDynamicArray@@@Z) already defined in DynamicArray.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl copy_worker(struct Worker *,struct Worker const *)" (?copy_worker@@YAXPAUWorker@@PBU1@@Z) already defined in DynamicArray.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl display_dynamic_array(struct DynamicArray const *)" (?display_dynamic_array@@YAXPBUDynamicArray@@@Z) already defined in DynamicArray.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl display_worker(struct Worker const *)" (?display_worker@@YAXPBUWorker@@@Z) already defined in Worker.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl free_worker_messages(struct Worker *)" (?free_worker_messages@@YAXPAUWorker@@@Z) already defined in Worker.obj
+LoadBalancer.obj : error LNK2005: "struct Worker * __cdecl get_worker(struct DynamicArray const *,unsigned int)" (?get_worker@@YAPAUWorker@@PBUDynamicArray@@I@Z) already defined in DynamicArray.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl initialize_dynamic_array(struct DynamicArray *,unsigned int)" (?initialize_dynamic_array@@YAXPAUDynamicArray@@I@Z) already defined in DynamicArray.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl initialize_worker(struct Worker *,char const *,char const *,int,bool)" (?initialize_worker@@YAXPAUWorker@@PBD1H_N@Z) already defined in Worker.obj
+LoadBalancer.obj : error LNK2005: "void __cdecl remove_worker(struct DynamicArray *,unsigned int)" (?remove_worker@@YAXPAUDynamicArray@@I@Z) already defined in DynamicArray.obj
+network.obj : error LNK2005: "unsigned int __cdecl accept_connection(unsigned int)" (?accept_connection@@YAII@Z) already defined in LoadBalancer.obj
+network.obj : error LNK2005: "void __cdecl cleanup_winsock(void)" (?cleanup_winsock@@YAXXZ) already defined in LoadBalancer.obj
+network.obj : error LNK2005: "unsigned int __cdecl create_client_socket(char const *,int)" (?create_client_socket@@YAIPBDH@Z) already defined in LoadBalancer.obj
+network.obj : error LNK2005: "unsigned int __cdecl create_server_socket(int)" (?create_server_socket@@YAIH@Z) already defined in LoadBalancer.obj
+network.obj : error LNK2005: "void __cdecl initialize_winsock(void)" (?initialize_winsock@@YAXXZ) already defined in LoadBalancer.obj
+WorkerManager.obj : error LNK2005: "unsigned int __cdecl accept_connection(unsigned int)" (?accept_connection@@YAII@Z) already defined in LoadBalancer.obj
+WorkerManager.obj : error LNK2005: "void __cdecl cb_destroy(struct CircularBuffer *)" (?cb_destroy@@YAXPAUCircularBuffer@@@Z) already defined in CircularBuffer.obj
+WorkerManager.obj : error LNK2005: "void __cdecl cb_initialize(struct CircularBuffer *,unsigned int)" (?cb_initialize@@YAXPAUCircularBuffer@@I@Z) already defined in CircularBuffer.obj
+WorkerManager.obj : error LNK2005: "bool __cdecl cb_is_empty(struct CircularBuffer const *)" (?cb_is_empty@@YA_NPBUCircularBuffer@@@Z) already defined in CircularBuffer.obj
+WorkerManager.obj : error LNK2005: "bool __cdecl cb_is_full(struct CircularBuffer const *)" (?cb_is_full@@YA_NPBUCircularBuffer@@@Z) already defined in CircularBuffer.obj
+WorkerManager.obj : error LNK2005: "void * __cdecl cb_pop(struct CircularBuffer *)" (?cb_pop@@YAPAXPAUCircularBuffer@@@Z) already defined in CircularBuffer.obj
+WorkerManager.obj : error LNK2005: "bool __cdecl cb_push(struct CircularBuffer *,void *)" (?cb_push@@YA_NPAUCircularBuffer@@PAX@Z) already defined in CircularBuffer.obj
+WorkerManager.obj : error LNK2005: "void __cdecl cleanup_winsock(void)" (?cleanup_winsock@@YAXXZ) already defined in LoadBalancer.obj
+WorkerManager.obj : error LNK2005: "unsigned int __cdecl create_client_socket(char const *,int)" (?create_client_socket@@YAIPBDH@Z) already defined in LoadBalancer.obj
+WorkerManager.obj : error LNK2005: "unsigned int __cdecl create_server_socket(int)" (?create_server_socket@@YAIH@Z) already defined in LoadBalancer.obj
+WorkerManager.obj : error LNK2005: "void __cdecl initialize_winsock(void)" (?initialize_winsock@@YAXXZ) already defined in LoadBalancer.obj
 MSVCRTD.lib(exe_main.obj) : error LNK2019: unresolved external symbol _main referenced in function "int __cdecl invoke_main(void)" (?invoke_main@@YAHXZ)
 C:\Users\KORISNIK\Desktop\ikp_ttemp\IKP_projekat_Load_Balancing\IKP_VS\LoadBalancing\Debug\Common.exe : fatal error LNK1120: 1 unresolved externals
