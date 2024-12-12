@@ -6,6 +6,7 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include "../Common/CircularBuffer.h"
 
 typedef struct {
     char ID[10];
@@ -14,6 +15,7 @@ typedef struct {
     bool Status; // true = dostupan, false = zauzet
     char** Data;  // Pointer za niz poruka
     int message_count;  // Broj poruka koje Worker trenutno drži
+    CircularBuffer messageBuffer; // Dodajemo kružni buffer
 } Worker;
 
 void initialize_worker(Worker* worker, const char* id, const char* ip, int port, bool status);

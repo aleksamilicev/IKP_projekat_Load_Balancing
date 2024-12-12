@@ -46,14 +46,15 @@ private:
     }
 
     void notify_workers(const char* message, const char* sender_id) {
-        //std::lock_guard<std::mutex> lock(workers_mutex); // kad zakemontarisem ovo onda se uradi sync
-
         for (auto& worker : workers) {
             if (strcmp(worker.ID, sender_id) != 0) {
-                add_message(&worker, message);
+                if (!cb_push(&worker.messageBuffer, _strdup(message))) {
+                    safe_log(("Buffer full for Worker " + std::string(worker.ID)).c_str());
+                }
             }
         }
     }
+
 
     void setup_socket() {
         wr_server_socket = socket(AF_INET, SOCK_DGRAM, 0);
@@ -90,6 +91,10 @@ private:
 
             Worker worker;
             initialize_worker(&worker, id, ip, port, true);
+
+            // Inicijalizacija kružnog buffera
+            cb_initialize(&worker.messageBuffer, 200);  // Buffer sa kapacitetom od 100 poruka
+
             workers.push_back(worker);
 
             display_worker(&worker);
@@ -116,23 +121,34 @@ private:
         Worker* target_worker = &workers[worker_index];
         worker_index = (worker_index + 1) % num_workers;
 
-        add_message(target_worker, buffer);
-        safe_log(("- " + std::string(target_worker->ID) + " stores " + buffer).c_str());
+        // Dodajemo poruku u kružni buffer
+        if (!cb_push(&target_worker->messageBuffer, _strdup(buffer))) {
+            safe_log(("Buffer full for Worker " + std::string(target_worker->ID)).c_str());
+            return;
+        }
+
+        safe_log(("Message added to Worker " + std::string(target_worker->ID)).c_str());
 
         // Log workers' state before notification
         safe_log("Workers' state before notification:");
         for (const auto& worker : workers) {
             std::string state = worker.ID + std::string(": [");
-            for (int j = 0; j < worker.message_count; ++j) {
-                state += worker.Data[j];
-                if (j < worker.message_count - 1) {
-                    state += ", ";
+            size_t current = worker.messageBuffer.tail;
+            for (size_t i = 0; i < worker.messageBuffer.size; ++i) {
+                char* message = static_cast<char*>(worker.messageBuffer.buffer[current]);
+                if (message) {
+                    state += message;
+                    if (i < worker.messageBuffer.size - 1) {
+                        state += ", ";
+                    }
                 }
+                current = (current + 1) % worker.messageBuffer.capacity;
             }
             state += "]";
             safe_log(state.c_str());
         }
 
+        // Obaveštavanje drugih workera
         notify_workers(buffer, target_worker->ID);
         safe_log(("- " + std::string(target_worker->ID) + " notifies other workers").c_str());
 
@@ -140,16 +156,23 @@ private:
         safe_log("Workers' state after notification:");
         for (const auto& worker : workers) {
             std::string state = worker.ID + std::string(": [");
-            for (int j = 0; j < worker.message_count; ++j) {
-                state += worker.Data[j];
-                if (j < worker.message_count - 1) {
-                    state += ", ";
+            size_t current = worker.messageBuffer.tail;
+            for (size_t i = 0; i < worker.messageBuffer.size; ++i) {
+                char* message = static_cast<char*>(worker.messageBuffer.buffer[current]);
+                if (message) {
+                    state += message;
+                    if (i < worker.messageBuffer.size - 1) {
+                        state += ", ";
+                    }
                 }
+                current = (current + 1) % worker.messageBuffer.capacity;
             }
             state += "]";
             safe_log(state.c_str());
         }
     }
+
+
 
     void send_response_to_lb(const struct sockaddr_in& lb_addr) {
         std::lock_guard<std::mutex> lock(socket_mutex);
