@@ -1,28 +1,37 @@
+#pragma region Include
 #include "../common/network.cpp"
 #include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#pragma endregion
 
+#pragma region Define
 #define LB_IP "127.0.0.1"
 #define LB_PORT 5059
+#pragma endregion
 
-volatile sig_atomic_t stop = 0;
 
-// Funkcija za obradu signala Ctrl+C
+#pragma region CTRL+C
+volatile sig_atomic_t stop = 0; // Citanje i pisanje se izvode kao atomic operations
+// Koristio sam specijalni sigurnosni tip da nam se ne desava da se program zaustavi u bilo kom trenutku
+// Sigurno rukovanje sa CTRL+C
+// volatile znaci da ne dozvoljavamo kompajleru da optimizuje vrednost ove promenljive unutar fje signal_handler
 void handle_signal(int signal) {
     if (signal == SIGINT) {
-        stop = 1;
+        stop = 1;   // Globalna promenljiva koja signalizira kad program treba biti prekinut
     }
 }
+#pragma endregion
+
 
 void send_messages(SOCKET client_socket, int num_messages) {
     char message[1024];
     for (int i = 0; i < num_messages; ++i) {
         snprintf(message, sizeof(message), "Message %d", i + 1);
 
-        // Slanje poruke Load Balanceru
+        // Slanje poruke LB-u
         int bytes_sent = send(client_socket, message, strlen(message), 0);
         if (bytes_sent == SOCKET_ERROR) {
             printf("\nFailed to send message: %d\n", WSAGetLastError());
@@ -36,7 +45,7 @@ void send_messages(SOCKET client_socket, int num_messages) {
         char buffer[1024] = { 0 };
         int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
         if (bytes_received > 0) {
-            buffer[bytes_received] = '\0'; // Završni karakter
+            buffer[bytes_received] = '\0';
             printf("Received from LB: %s\n", buffer);
         }
         else if (bytes_received == SOCKET_ERROR) {
@@ -100,7 +109,7 @@ int main() {
                 message[len - 1] = '\0';
             }
 
-            // Slanje pojedinaène poruke
+            // Slanje pojedinacne poruke
             int bytes_sent = send(client_socket, message, strlen(message), 0);
             if (bytes_sent == SOCKET_ERROR) {
                 printf("\nFailed to send message: %d\n", WSAGetLastError());
@@ -109,7 +118,7 @@ int main() {
                 printf("Client sent: %s\n", message);
             }
 
-            // Prijem odgovora
+            // Prijem odgovora od LB-a
             char buffer[1024] = { 0 };
             int bytes_received = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
             if (bytes_received > 0) {
@@ -134,11 +143,9 @@ int main() {
             printf("Enter the number of messages to send: ");
             if (scanf_s("%d", &num_messages) != 1) {
                 printf("Invalid input. Please enter a number.\n");
-                // Oèisti ulazni bafer
                 while (getchar() != '\n');
                 continue;
             }
-            // Oèisti newline iz ulaznog bafera
             while (getchar() != '\n');
             send_messages(client_socket, num_messages);
         }
